@@ -5,3 +5,4 @@ NSS.c
 pm_to_blib
 blib
 MYMETA.*
+Makefile.old
