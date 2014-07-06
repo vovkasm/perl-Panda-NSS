@@ -1,0 +1,7 @@
+Makefile
+NSS.bs
+NSS.c
+*.o
+pm_to_blib
+blib
+MYMETA.*
