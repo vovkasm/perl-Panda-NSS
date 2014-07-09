@@ -10,7 +10,7 @@ my $tmpdir = tempdir(CLEANUP => 1);
 note "NSS DB dir = $tmpdir";
 
 Panda::NSS::init($tmpdir);
-Panda::NSS::SecMod::add_new_module("Builtins", "libnssckbi.dylib");
+Panda::NSS::add_builtins();
 
 my $cert_data = slurp('t/has_aia.cer');
 my $cert = Panda::NSS::Cert->new($cert_data);
