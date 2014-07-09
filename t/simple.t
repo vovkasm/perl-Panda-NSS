@@ -15,8 +15,8 @@ Panda::NSS::SecMod::add_new_module("Builtins", "libnssckbi.dylib");
 my $cert_data = slurp('t/has_aia.cer');
 my $cert = Panda::NSS::Cert->new($cert_data);
 
-ok(!!$cert->verify($vfytime), 'Correctly fetch all intermediate certs and check chain');
-ok(!$cert->verify(10), 'Not valid in the distant past');
+ok(!!$cert->simple_verify(Panda::NSS::CERTIFICATE_USAGE_OBJECT_SIGNER, $vfytime), 'Correctly fetch all intermediate certs and check chain');
+ok(!$cert->simple_verify(Panda::NSS::CERTIFICATE_USAGE_OBJECT_SIGNER, 10), 'Not valid in the distant past');
 #TODO: is($cert->verify($vfytime, Panda::NSS::certUsageObjectSigner), 1, 'Correctly fetch all intermediate certs and check chain');
 
 done_testing;

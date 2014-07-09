@@ -27,6 +27,23 @@ PNSS_croak() {
 MODULE = Panda::NSS     PACKAGE = Panda::NSS
 PROTOTYPES: DISABLE
 
+BOOT:
+    HV *stash = gv_stashpv("Panda::NSS", GV_ADD);
+
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_CHECK_ALL_USAGES", newSViv(certificateUsageCheckAllUsages));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_SSL_CLIENT", newSViv(certificateUsageSSLClient));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_SSL_SERVER", newSViv(certificateUsageSSLServer));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_SSL_SERVER_WITH_STEP_UP", newSViv(certificateUsageSSLServerWithStepUp));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_SSL_CA", newSViv(certificateUsageSSLCA));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_EMAIL_SIGNER", newSViv(certificateUsageEmailSigner));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_EMAIL_RECIPIENT", newSViv(certificateUsageEmailRecipient));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_OBJECT_SIGNER", newSViv(certificateUsageObjectSigner));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_USER_CERT_IMPORT", newSViv(certificateUsageUserCertImport));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_VERIFY_CA", newSViv(certificateUsageVerifyCA));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_PROTECTED_OBJECT_SIGNER", newSViv(certificateUsageProtectedObjectSigner));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_STATUS_RESPONDER", newSViv(certificateUsageStatusResponder));
+    newCONSTSUB(stash, "CERTIFICATE_USAGE_ANY_CA", newSViv(certificateUsageAnyCA));
+
 void
 init(const char* configdir = NULL)
   CODE:
@@ -99,11 +116,17 @@ new(klass, SV* cert_sv)
     RETVAL
 
 int
-verify(Panda::NSS::Cert cert, double time_nv = 0)
+simple_verify(Panda::NSS::Cert cert, int usage_iv = 0, double time_nv = 0)
   CODE:
     /* In params */
     CERTValInParam cvin[4];
     int cvinIdx = 0;
+
+    SECCertificateUsage certUsage = usage_iv;
+
+    if (certUsage < 0 || certUsage > certificateUsageHighest) {
+        croak("Incorrect certificate usage value");
+    }
 
     if (time_nv > 0) {
         time_nv *= 1000000;
@@ -146,8 +169,6 @@ verify(Panda::NSS::Cert cert, double time_nv = 0)
     ++cvoutIdx;
 
     cvout[cvoutIdx].type = cert_po_end;
-
-    SECCertificateUsage  certUsage = certificateUsageObjectSigner;
 
     SECStatus secStatus = CERT_PKIXVerifyCert(cert, certUsage, cvin, cvout, NULL);
     if (secStatus == SECSuccess) {
