@@ -1,16 +1,22 @@
 use strict;
 use warnings;
+use File::Temp 'tempdir';
 use Test::More;
 use Panda::NSS;
 
 my $vfytime = 1404206968;
 
-Panda::NSS::init();
+my $tmpdir = tempdir(CLEANUP => 1);
+note "NSS DB dir = $tmpdir";
+
+Panda::NSS::init($tmpdir);
+Panda::NSS::SecMod::add_new_module("Builtins", "libnssckbi.dylib");
 
 my $cert_data = slurp('t/has_aia.cer');
 my $cert = Panda::NSS::Cert->new($cert_data);
 
-is($cert->verify($vfytime), 1, 'Correctly fetch all intermediate certs and check chain');
+ok(!!$cert->verify($vfytime), 'Correctly fetch all intermediate certs and check chain');
+ok(!$cert->verify(10), 'Not valid in the distant past');
 #TODO: is($cert->verify($vfytime, Panda::NSS::certUsageObjectSigner), 1, 'Correctly fetch all intermediate certs and check chain');
 
 done_testing;

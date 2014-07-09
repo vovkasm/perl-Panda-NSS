@@ -28,12 +28,40 @@ MODULE = Panda::NSS     PACKAGE = Panda::NSS
 PROTOTYPES: DISABLE
 
 void
-init()
-CODE:
-    SECStatus secStatus;
-    secStatus = NSS_NoDB_Init(NULL);
-    SECMOD_AddNewModule("Builtins", DLL_PREFIX"nssckbi."DLL_SUFFIX, 0, 0);
-    if (secStatus != SECSuccess) {
+init(const char* configdir = NULL)
+  CODE:
+    if (!NSS_IsInitialized()) {
+        SECStatus secStatus;
+        if (configdir != NULL)
+            secStatus = NSS_InitReadWrite(configdir);
+        else
+            secStatus = NSS_NoDB_Init(NULL);
+        if (secStatus != SECSuccess) {
+            PNSS_croak();
+        }
+    }
+
+void
+END()
+  CODE:
+    if (NSS_IsInitialized()) {
+        int mod_type;
+        SECMOD_DeleteModule("Builtins", &mod_type);
+        NSS_Shutdown();
+        PR_Cleanup();
+    }
+
+
+MODULE = Panda::NSS     PACKAGE = Panda::NSS::SecMod
+PROTOTYPES: DISABLE
+
+void
+add_new_module(const char* module_name, const char* dll_path)
+  PREINIT:
+    SECStatus status;
+  CODE:
+    status = SECMOD_AddNewModule(module_name, dll_path, 0, 0);
+    if (status != SECSuccess) {
         PNSS_croak();
     }
 
@@ -71,36 +99,53 @@ new(klass, SV* cert_sv)
     RETVAL
 
 int
-verify(Panda::NSS::Cert cert, int time = 0)
+verify(Panda::NSS::Cert cert, double time_nv = 0)
   CODE:
     /* In params */
-    CERTValInParam cvin[3];
-    cvin[0].type = cert_pi_useAIACertFetch;
-    cvin[0].value.scalar.b = PR_TRUE;
+    CERTValInParam cvin[4];
+    int cvinIdx = 0;
 
-    cvin[1].type = cert_pi_revocationFlags;
-    cvin[1].value.pointer.revocation = CERT_GetPKIXVerifyNistRevocationPolicy();
+    if (time_nv > 0) {
+        time_nv *= 1000000;
+        PRTime pr_time;
+        LL_D2L(pr_time, time_nv);
+        cvin[cvinIdx].type = cert_pi_date;
+        cvin[cvinIdx].value.scalar.time = pr_time;
+        ++cvinIdx;
+    }
 
-    cvin[2].type = cert_pi_end;
+    cvin[cvinIdx].type = cert_pi_useAIACertFetch;
+    cvin[cvinIdx].value.scalar.b = PR_TRUE;
+    ++cvinIdx;
+
+    cvin[cvinIdx].type = cert_pi_revocationFlags;
+    cvin[cvinIdx].value.pointer.revocation = CERT_GetPKIXVerifyNistRevocationPolicy();
+    ++cvinIdx;
+
+    cvin[cvinIdx].type = cert_pi_end;
 
     /* Out params */
     CERTValOutParam cvout[4];
+    int cvoutIdx = 0;
 
-    cvout[0].type = cert_po_trustAnchor;
-    cvout[0].value.pointer.cert = NULL;
+    cvout[cvoutIdx].type = cert_po_trustAnchor;
+    cvout[cvoutIdx].value.pointer.cert = NULL;
+    ++cvoutIdx;
 
-    cvout[1].type = cert_po_certList;
-    cvout[1].value.pointer.chain = NULL;
+    cvout[cvoutIdx].type = cert_po_certList;
+    cvout[cvoutIdx].value.pointer.chain = NULL;
+    ++cvoutIdx;
 
     CERTVerifyLog log;
     log.arena = PORT_NewArena(512);
     log.head = log.tail = NULL;
     log.count = 0;
 
-    cvout[2].type = cert_po_errorLog;
-    cvout[2].value.pointer.log = &log;
+    cvout[cvoutIdx].type = cert_po_errorLog;
+    cvout[cvoutIdx].value.pointer.log = &log;
+    ++cvoutIdx;
 
-    cvout[3].type = cert_po_end;
+    cvout[cvoutIdx].type = cert_po_end;
 
     SECCertificateUsage  certUsage = certificateUsageObjectSigner;
 
@@ -109,10 +154,30 @@ verify(Panda::NSS::Cert cert, int time = 0)
         RETVAL = 1;
     }
     else {
-        PNSS_croak();
         RETVAL = 0;
     }
+
+    CERTCertificate* issuerCert = cvout[0].value.pointer.cert;
+    if (issuerCert) {
+        CERT_DestroyCertificate(issuerCert);
+    }
+
+    CERTCertList* builtChain = cvout[1].value.pointer.chain;
+    if (builtChain) {
+        CERT_DestroyCertList(builtChain);
+    }
+
+    for (CERTVerifyLogNode* node = log.head; node; node = node->next) {
+        if (node->cert) CERT_DestroyCertificate(node->cert);
+    }
+
+    PORT_FreeArena(log.arena, PR_FALSE);
 
   OUTPUT:
     RETVAL
 
+void
+DESTROY(Panda::NSS::Cert cert)
+  CODE:
+    CERT_DestroyCertificate(cert);
+    cert = NULL;
