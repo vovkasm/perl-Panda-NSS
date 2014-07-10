@@ -89,6 +89,60 @@ Constructs certificate object.
 
 =back
 
+=head3 PROPERTIES
+
+=over 4
+
+=item C<< $cert->version >>
+
+Returns certificate version. 1, 2 or 3.
+
+=item C<< $cert->serial_number >>
+
+Returns certificate serial number as a binary string.
+
+=item C<< $cert->serial_number_hex >>
+
+Returns certificate serial number as a hex encoded string.
+
+=item C<< $cert->subject >>
+
+Returns certificate subject as a string.
+
+=item C<< $cert->issuer >>
+
+Returns certificate issuer as a string.
+
+=item C<< $cert->common_name >>
+
+Returns common name extracted from subject.
+
+=item C<< $cert->country_name >>
+
+Returns country name extracted from subject.
+
+=item C<< $cert->locality_name >>
+
+Returns locality name extracted from subject.
+
+=item C<< $cert->state_name >>
+
+Returns state field extracted from subject.
+
+=item C<< $cert->org_name >>
+
+Returns organization name extracted from subject.
+
+=item C<< $cert->org_unit_name >>
+
+Returns organization unit extracted from subject.
+
+=item C<< $cert->domain_component_name >>
+
+Returns domain component extracted from subject.
+
+=back
+
 =head3 METHODS
 
 =over 4

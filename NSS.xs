@@ -6,6 +6,7 @@
 
 #include <nspr.h>
 #include <nss.h>
+#include <secder.h>
 #include <secmod.h>
 #include <cert.h>
 #include <prerror.h>
@@ -108,9 +109,126 @@ new(klass, SV* cert_sv)
     PORT_Free(item.data);
 
     RETVAL = cert;
-
   OUTPUT:
     RETVAL
+
+
+int
+version(Panda::NSS::Cert cert)
+  CODE:
+    if (cert->version.len > 0) {
+        RETVAL = DER_GetInteger(&cert->version) + 1;
+    }
+    else {
+        RETVAL = 1;
+    }
+  OUTPUT:
+    RETVAL
+
+
+SV*
+serial_number(Panda::NSS::Cert cert)
+  CODE:
+    RETVAL = newSVpvn_flags((const char*)cert->serialNumber.data, cert->serialNumber.len, 0);
+  OUTPUT:
+    RETVAL
+
+
+char*
+serial_number_hex(Panda::NSS::Cert cert)
+  CODE:
+    char* str_hex = CERT_Hexify(&cert->serialNumber, 0);
+    RETVAL = str_hex;
+    PORT_Free(str_hex);
+  OUTPUT:
+    RETVAL
+
+
+char*
+subject(Panda::NSS::Cert cert)
+  CODE:
+    RETVAL = cert->subjectName;
+  OUTPUT:
+    RETVAL
+
+
+char*
+issuer(Panda::NSS::Cert cert)
+  CODE:
+    RETVAL = cert->issuerName;
+  OUTPUT:
+    RETVAL
+
+
+SV*
+common_name(Panda::NSS::Cert cert)
+  CODE:
+    char* str = CERT_GetCommonName(&cert->subject);
+    RETVAL = newSVpv( str, 0);
+    PORT_Free(str);
+  OUTPUT:
+    RETVAL
+
+
+SV*
+country_name(Panda::NSS::Cert cert)
+  CODE:
+    char* str = CERT_GetCountryName(&cert->subject);
+    RETVAL = newSVpv( str, 0);
+    PORT_Free(str);
+  OUTPUT:
+    RETVAL
+
+
+SV*
+locality_name(Panda::NSS::Cert cert)
+  CODE:
+    char* str = CERT_GetLocalityName(&cert->subject);
+    RETVAL = newSVpv( str, 0);
+    PORT_Free(str);
+  OUTPUT:
+    RETVAL
+
+
+SV*
+state_name(Panda::NSS::Cert cert)
+  CODE:
+    char* str = CERT_GetStateName(&cert->subject);
+    RETVAL = newSVpv( str, 0);
+    PORT_Free(str);
+  OUTPUT:
+    RETVAL
+
+
+SV*
+org_name(Panda::NSS::Cert cert)
+  CODE:
+    char* str = CERT_GetOrgName(&cert->subject);
+    RETVAL = newSVpv( str, 0);
+    PORT_Free(str);
+  OUTPUT:
+    RETVAL
+
+
+SV*
+org_unit_name(Panda::NSS::Cert cert)
+  CODE:
+    char* str = CERT_GetOrgUnitName(&cert->subject);
+    RETVAL = newSVpv( str, 0);
+    PORT_Free(str);
+  OUTPUT:
+    RETVAL
+
+
+SV*
+domain_component_name(Panda::NSS::Cert cert)
+  CODE:
+    char* str = CERT_GetDomainComponentName(&cert->subject);
+    RETVAL = newSVpv( str, 0);
+    PORT_Free(str);
+  OUTPUT:
+    RETVAL
+
 
 int
 simple_verify(Panda::NSS::Cert cert, int usage_iv = 0, double time_nv = 0)
