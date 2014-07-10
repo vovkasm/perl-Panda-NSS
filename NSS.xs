@@ -10,9 +10,6 @@
 #include <cert.h>
 #include <prerror.h>
 
-#define DLL_PREFIX "lib"
-#define DLL_SUFFIX "dylib"
-
 typedef CERTCertificate* Panda__NSS__Cert;
 
 static

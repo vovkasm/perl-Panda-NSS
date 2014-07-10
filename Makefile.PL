@@ -7,7 +7,7 @@ my $nss_cflags = `pkg-config --cflags nss`;
 
 WriteMakefile(
     NAME => 'Panda::NSS',
-    VERSION_FROM => 'NSS.pm',
+    VERSION_FROM => 'lib/Panda/NSS.pm',
     AUTHOR => 'Vladimir Timofeev <vovkasm@gmail.com>',
     LICENSE => 'perl',
     BUILD_REQUIRES => {
