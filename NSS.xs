@@ -312,6 +312,54 @@ simple_verify(Panda::NSS::Cert cert, int usage_iv = 0, double time_nv = 0)
   OUTPUT:
     RETVAL
 
+
+int
+verify_signed_data(Panda::NSS::Cert cert, SV* payload, SV* signature, double time_nv = 0)
+  CODE:
+    PLArenaPool* arena = PORT_NewArena(512);
+
+    PRTime pr_time = 0;
+    if (time_nv > 0) {
+        time_nv *= 1000000;
+        LL_D2L(pr_time, time_nv);
+    }
+    else {
+        pr_time = PR_Now();
+    }
+
+    STRLEN payload_len;
+    unsigned char* payload_pv = (unsigned char*)SvPV(payload, payload_len);
+    STRLEN signature_len;
+    unsigned char* signature_pv = (unsigned char*)SvPV(signature, signature_len);
+
+    SECStatus rv;
+    CERTSignedData sd;
+    PORT_Memset(&sd, 0, sizeof(sd));
+
+    sd.data.data = payload_pv;
+    sd.data.len = payload_len;
+    sd.signature.data = signature_pv;
+    sd.signature.len = signature_len << 3; // Convert to bit counter
+    rv = SECOID_CopyAlgorithmID(arena, &sd.signatureAlgorithm, &cert->subjectPublicKeyInfo.algorithm);
+    if (rv) {
+        PORT_FreeArena(arena, PR_FALSE);
+        PNSS_croak();
+    }
+
+    rv = CERT_VerifySignedData(&sd, cert, pr_time, NULL);
+    if (rv == SECSuccess) {
+        RETVAL = 1;
+    }
+    else {
+        RETVAL = 0;
+    }
+    
+    PORT_FreeArena(arena, PR_FALSE);
+
+  OUTPUT:
+    RETVAL
+
+
 void
 DESTROY(Panda::NSS::Cert cert)
   CODE:

@@ -149,8 +149,29 @@ Returns domain component extracted from subject.
 
 =item C<< $rv = $cert->simple_verify( [ $usage ], [ $time ]) >>
 
+Arguments:
+
+=over 2
+
+=item C<< $usage >> (Default: C<CERTIFICATE_USAGE_CHECK_ALL_USAGES>)
+
+Sertificate usage. One of C<CERTIFICATE_USAGE_*> constants.
+
+=item C<< $time >> (Default: current time)
+
+Time at which the certificate should be valid.
+
+=back
+
 Method do verification process (it uses C<CERT_PKIXVerifyCert> from I<NSS>).
+
 Returns C<true> if certificate valid.
+
+=item C<< $rv = $cert->verify_signed_data( $data, $signature, [ $time ]) >>
+
+Verify the signature of a signed data with the given certificate.
+
+Returns C<true> if signature match.
 
 =back
 
