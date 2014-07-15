@@ -44,6 +44,12 @@ is $cert->domain_component_name, undef, 'Domain Component name correct';
     ok $cert->verify_signed_data($payload, $signature, 1405088146), "data signed with this cert";
 }
 
+{
+    my $cert_data = slurp('t/has_aia.pem');
+    my $cert = Panda::NSS::Cert->new($cert_data);
+    ok !!$cert->simple_verify(Panda::NSS::CERTIFICATE_USAGE_OBJECT_SIGNER, $vfytime), 'Pem cert is valid';
+}
+
 done_testing;
 
 sub slurp {

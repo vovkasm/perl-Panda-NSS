@@ -83,9 +83,13 @@ in NSS. May croaks if library initialized without I<certdb>.
 
 =over 4
 
-=item C<< $cert = Panda::NSS::Cert->new( $cert_data_in_der_format ) >>
+=item C<< $cert = Panda::NSS::Cert->new( $data ) >>
 
 Constructs certificate object.
+
+C<< $data >> can be certificate in B<DER> binary format or in B<PEM> format
+(base64 encoded B<DER> certificate, enclosed between I<"-----BEGIN CERTIFICATE-----">
+and I<"-----END CERTIFICATE-----">). Format is autodetected.
 
 =back
 

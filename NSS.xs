@@ -6,12 +6,18 @@
 
 #include <nspr.h>
 #include <nss.h>
+#include <nssb64.h>
 #include <secder.h>
 #include <secmod.h>
 #include <cert.h>
 #include <prerror.h>
 
 typedef CERTCertificate* Panda__NSS__Cert;
+
+static const char NS_CERT_HEADER[]  = "-----BEGIN CERTIFICATE-----";
+static const char NS_CERT_TRAILER[] = "-----END CERTIFICATE-----";
+#define NS_CERT_HEADER_LEN  ((sizeof NS_CERT_HEADER) - 1)
+#define NS_CERT_TRAILER_LEN ((sizeof NS_CERT_TRAILER) - 1)
 
 static
 void
@@ -88,25 +94,80 @@ Panda::NSS::Cert
 new(klass, SV* cert_sv)
   PREINIT:
     CERTCertificate *cert;
-    CERTCertDBHandle *defaultDB;
 
   CODE:
-    defaultDB = CERT_GetDefaultCertDB();
-
     STRLEN len;
     char* data = SvPV(cert_sv, len);
+    SECItem der = {siBuffer, NULL, 0};
 
-    SECItem item = {siBuffer, NULL, len};
-    item.data = (unsigned char*)PORT_Alloc(len);
-    PORT_Memcpy(item.data, data, len);
+    if (len == 0) {
+        croak("No data");
+    }
+
+    /* Autodetect Base64 encoded der */
+    if (data[0] == '-') {
+        int found = 0;
+        char* cbegin = NULL;
+        char* cend = NULL;
+        char* cp = data;
+        STRLEN cl = len;
+
+        if ( cl > NS_CERT_HEADER_LEN && PORT_Strncasecmp(cp, NS_CERT_HEADER, NS_CERT_HEADER_LEN) == 0 ) {
+            cp += NS_CERT_HEADER_LEN; cl -= NS_CERT_HEADER_LEN;
+            found = 1;
+        }
+        if (found) {
+            /* skip to next eol */
+            while ( cl && ( *cp != '\n' )) {
+                cp++; cl--;
+            } 
+            /* skip all blank lines */
+            while ( cl && ( *cp == '\n' || *cp == '\r' )) {
+                cp++; cl--;
+            }
+            if (cl) cbegin = cp;
+            if (cbegin) {
+                /* find the ending marker */
+                while ( cl >= NS_CERT_TRAILER_LEN ) {
+                    if ( PORT_Strncasecmp(cp, NS_CERT_TRAILER, NS_CERT_TRAILER_LEN) == 0 ) {
+                        cend = cp;
+                        break;
+                    }
+                    /* skip to next eol */
+                    while ( cl && ( *cp != '\n' )) {
+                        cp++; cl--;
+                    }
+                    /* skip all blank lines */
+                    while ( cl && ( *cp == '\n' || *cp == '\r' )) {
+                        cp++; cl--;
+                    }
+                }
+                if (cend) {
+                    STRLEN clen = cend - cbegin;
+                    SECItem* ok = NSSBase64_DecodeBuffer(NULL, &der, cbegin, clen);
+                    if (!ok) {
+                        SECITEM_FreeItem(&der, PR_FALSE);
+                        PNSS_croak();
+                    }
+                }
+            }
+        }
+    }
+
+    /* If not filled, then try binary DER */
+    if (der.len == 0) {
+        der.data = (unsigned char*)PORT_Alloc(len);
+        der.len = len;
+        PORT_Memcpy(der.data, data, len);
+    }
 
     /* CERT_NewTempCertificate( defaultDB, item, nickname, isPerm, copyDER) */
-    cert = CERT_NewTempCertificate(defaultDB, &item, NULL, PR_FALSE, PR_TRUE);
+    cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &der, NULL, PR_FALSE, PR_TRUE);
+    
+    SECITEM_FreeItem(&der, PR_FALSE);
     if (!cert) {
-        PORT_Free(item.data);
         PNSS_croak();
     }
-    PORT_Free(item.data);
 
     RETVAL = cert;
   OUTPUT:
