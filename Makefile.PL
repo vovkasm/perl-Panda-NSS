@@ -12,6 +12,7 @@ WriteMakefile(
     LICENSE => 'perl',
     BUILD_REQUIRES => {
         'Test::More' => 0.88,
+        'Test::SharedFork' => 0.28,
     },
     CCFLAGS => $nss_cflags,
     LIBS => [$nss_libs],

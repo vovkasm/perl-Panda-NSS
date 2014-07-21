@@ -34,6 +34,27 @@ This function initialize NSS library. It calls C<NSS_InitReadWrite(dbpath)>.
 However you may not specify C<$certdb_path>, in that case C<NSS_NoDB_Init()>
 called, that mode not very useful for certificate checks.
 
+=item C<< Panda::NSS::reinit() >>
+
+This function should be called after fork to reinitialize NSS library.
+Any outstanding handles will become invalid, but new will work.
+
+Actually this function compare current pid with saved in previous init or
+reinit one and calls C<< SECMOD_RestartModules(false) >> if needed.
+
+Example:
+
+  use Panda::NSS;
+
+  Panda::NSS::init($nssdb_path);
+
+  my $pid = fork();
+  if ($pid == 0) {
+      # child
+      Panda::NSS::reinit();
+      # ... other code in child
+  }
+
 =item C<< Panda::NSS::add_builtins() >>
 
 This function load I<nssckbi> module, that contains default root certificates

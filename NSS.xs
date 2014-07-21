@@ -11,6 +11,7 @@
 #include <secmod.h>
 #include <cert.h>
 #include <prerror.h>
+#include <unistd.h>
 
 typedef CERTCertificate* Panda__NSS__Cert;
 
@@ -18,6 +19,8 @@ static const char NS_CERT_HEADER[]  = "-----BEGIN CERTIFICATE-----";
 static const char NS_CERT_TRAILER[] = "-----END CERTIFICATE-----";
 #define NS_CERT_HEADER_LEN  ((sizeof NS_CERT_HEADER) - 1)
 #define NS_CERT_TRAILER_LEN ((sizeof NS_CERT_TRAILER) - 1)
+
+static pid_t saved_pid = 0;
 
 static
 void
@@ -60,7 +63,21 @@ init(const char* configdir = NULL)
         if (secStatus != SECSuccess) {
             PNSS_croak();
         }
+        saved_pid = getpid();
     }
+
+void
+reinit()
+  CODE:
+    pid_t pid = getpid();
+    if (saved_pid == pid) {
+        XSRETURN(0);
+    }
+    SECStatus secStatus = SECMOD_RestartModules(PR_FALSE);
+    if (secStatus != SECSuccess) {
+        PNSS_croak();
+    }
+    saved_pid = pid;
 
 void
 END()
