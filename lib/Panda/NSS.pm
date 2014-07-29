@@ -18,7 +18,7 @@ sub add_builtins {
 
 1;
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
   # verify certificate
   use Panda::NSS;
@@ -55,8 +55,8 @@ called, that mode not very useful for certificate checks.
 This function should be called after fork to reinitialize NSS library.
 Any outstanding handles will become invalid, but new will work.
 
-Actually this function compare current pid with saved in previous init or
-reinit one and calls C<< SECMOD_RestartModules(false) >> if needed.
+Actually this function compare current B<PID> with saved in previous C<init> or
+C<reinit> one and calls C<< SECMOD_RestartModules(false) >> if needed.
 
 Example:
 
@@ -73,8 +73,8 @@ Example:
 
 =item C<< Panda::NSS::add_builtins() >>
 
-This function load I<nssckbi> module, that contains default root certificates
-in NSS. May croaks if library initialized without I<certdb>.
+This function load B<nssckbi> module, that contains default root certificates
+in NSS. May croaks if library initialized without B<certdb>.
 
 =back
 
@@ -125,7 +125,7 @@ in NSS. May croaks if library initialized without I<certdb>.
 Constructs certificate object.
 
 C<< $data >> can be certificate in B<DER> binary format or in B<PEM> format
-(base64 encoded B<DER> certificate, enclosed between I<"-----BEGIN CERTIFICATE-----">
+(Base64 encoded B<DER> certificate, enclosed between I<"-----BEGIN CERTIFICATE-----">
 and I<"-----END CERTIFICATE-----">). Format is auto-detected.
 
 =back
