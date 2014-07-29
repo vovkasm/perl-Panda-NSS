@@ -228,6 +228,8 @@ Another try to bind NSS to Perl.
 
 Allow to work with certificates, but can't validate with AIA.
 
+=back
+
 =head1 LICENSE
 
 This is free software; you can redistribute it and/or modify it under
