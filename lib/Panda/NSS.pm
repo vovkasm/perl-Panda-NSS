@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use Config ();
 
+# VERSION
+
 require XSLoader;
 XSLoader::load(__PACKAGE__, $VERSION);
 
