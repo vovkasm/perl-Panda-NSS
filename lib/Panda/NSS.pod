@@ -1,3 +1,4 @@
+# PODNAME: Panda/NSS.pm
 =head1 NAME
 
 Panda::NSS - NSS bindings for Perl
