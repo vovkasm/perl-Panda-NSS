@@ -212,14 +212,15 @@ serial_number(Panda::NSS::Cert cert)
     RETVAL
 
 
-char*
+SV*
 serial_number_hex(Panda::NSS::Cert cert)
   CODE:
-    char* str_hex = CERT_Hexify(&cert->serialNumber, 0);
-    RETVAL = str_hex;
-    PORT_Free(str_hex);
-  OUTPUT:
-    RETVAL
+    ST(0) = sv_newmortal();
+    const char* str_hex = CERT_Hexify(&cert->serialNumber, 0);
+    if (str_hex != NULL) {
+        sv_setpv(ST(0), str_hex);
+        PORT_Free((void*)str_hex);
+    }
 
 
 char*
