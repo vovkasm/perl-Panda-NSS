@@ -24,8 +24,10 @@ on 'configure' => sub {
 };
 
 on 'develop' => sub {
+  requires "Devel::PPPort" => "3.23";
   requires "Dist::Zilla" => "5";
   requires "Dist::Zilla::Plugin::Encoding" => "0";
+  requires "Dist::Zilla::Plugin::PPPort" => "0";
   requires "Dist::Zilla::Plugin::Prereqs" => "0";
   requires "Dist::Zilla::PluginBundle::DAGOLDEN" => "0";
   requires "File::Spec" => "0";
