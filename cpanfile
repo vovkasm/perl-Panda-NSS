@@ -29,6 +29,7 @@ on 'develop' => sub {
   requires "Dist::Zilla::Plugin::Encoding" => "0";
   requires "Dist::Zilla::Plugin::PPPort" => "0";
   requires "Dist::Zilla::Plugin::Prereqs" => "0";
+  requires "Dist::Zilla::Plugin::RemovePrereqs" => "0";
   requires "Dist::Zilla::PluginBundle::DAGOLDEN" => "0";
   requires "File::Spec" => "0";
   requires "File::Temp" => "0";
@@ -40,5 +41,4 @@ on 'develop' => sub {
   requires "Test::Pod" => "1.41";
   requires "Test::Pod::Coverage" => "1.08";
   requires "Test::Spelling" => "0.12";
-  requires "inc::DistMakeMaker" => "0";
 };
