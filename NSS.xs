@@ -382,8 +382,10 @@ simple_verify(Panda::NSS::Cert cert, int usage_iv = 0, double time_nv = 0)
         CERT_DestroyCertList(builtChain);
     }
 
-    for (CERTVerifyLogNode* node = log.head; node; node = node->next) {
+    CERTVerifyLogNode* node = log.head;
+    while (node) {
         if (node->cert) CERT_DestroyCertificate(node->cert);
+        node = node->next;
     }
 
     PORT_FreeArena(log.arena, PR_FALSE);
