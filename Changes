@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+  - Fix compilation with gcc-4.4.7 in ANSI mode (Centos 6.5)
+
 0.002     2014-07-30 01:49:34+04:00 Europe/Moscow
 
   - Fix $cert->serial_number_hex method
