@@ -23,7 +23,7 @@ my %WriteMakefileArgs = (
   "AUTHOR" => "Vladimir Timofeev <vovkasm\@gmail.com>",
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => 0,
-    "PkgConfig" => "0.08320"
+    "PkgConfig" => "0.14026"
   },
   "DISTNAME" => "Panda-NSS",
   "LICENSE" => "perl",
