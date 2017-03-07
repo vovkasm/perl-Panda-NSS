@@ -7,10 +7,15 @@ use warnings;
 use 5.006;
 use ExtUtils::MakeMaker;
 
-use PkgConfig;
-my $nss_config = PkgConfig->find('nss');
-if ($nss_config->errmsg) {
+sub ConfigureNSS {
+  unless (eval { require PkgConfig }) {
+    die "PkgConfig package not found, but required to find NSS library";
+  }
+  my $nss_config = PkgConfig->find('nss');
+  if ($nss_config->errmsg) {
     die "To build this module you need NSS installed!";
+  }
+  return {CCFLAGS => join(' ',$nss_config->get_cflags), LIBS => [ join(' ',$nss_config->get_ldflags) ] };
 }
 
 my %WriteMakefileArgs = (
@@ -44,8 +49,7 @@ my %WriteMakefileArgs = (
 
 %WriteMakefileArgs = (
     %WriteMakefileArgs,
-    CCFLAGS => join(' ',$nss_config->get_cflags),
-    LIBS => [ join(' ',$nss_config->get_ldflags) ],
+    CONFIGURE => &ConfigureNSS,
 );
 
 my %FallbackPrereqs = (
