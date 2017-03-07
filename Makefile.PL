@@ -49,7 +49,7 @@ my %WriteMakefileArgs = (
 
 %WriteMakefileArgs = (
     %WriteMakefileArgs,
-    CONFIGURE => &ConfigureNSS,
+    CONFIGURE => \&ConfigureNSS,
 );
 
 my %FallbackPrereqs = (
