@@ -1,10 +1,4 @@
-use PkgConfig;
-my $nss_config = PkgConfig->find('nss');
-if ($nss_config->errmsg) {
-    die "To build this module you need NSS installed!";
-}
-# inc::DistMakeMaker <self>
-# and Dist::Zilla::Plugin::MakeMaker::Awesome 0.38.
+# Dist::Zilla::Plugin::MakeMaker::Awesome 0.38.
 # Don't edit it but the dist.ini and plugins used to construct it.
 
 use strict;
@@ -12,6 +6,12 @@ use warnings;
 
 use 5.006;
 use ExtUtils::MakeMaker;
+
+use PkgConfig;
+my $nss_config = PkgConfig->find('nss');
+if ($nss_config->errmsg) {
+    die "To build this module you need NSS installed!";
+}
 
 my %WriteMakefileArgs = (
   "ABSTRACT" => "Perl bindings to NSS Mozilla security library",
