@@ -4,7 +4,8 @@ use warnings;
 use Config ();
 
 # ABSTRACT: Perl bindings to NSS Mozilla security library
-# VERSION
+
+our $VERSION = '0.03';
 
 require XSLoader;
 XSLoader::load(__PACKAGE__, $VERSION);
