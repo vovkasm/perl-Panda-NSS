@@ -31,6 +31,16 @@ PNSS_croak() {
     croak_sv(sv_2mortal(sv));
 }
 
+static
+void
+NSS_cleanup() {
+    if (NSS_IsInitialized()) {
+        int mod_type;
+        SECMOD_DeleteModule("Builtins", &mod_type);
+        PR_Cleanup();
+    }
+}
+
 MODULE = Panda::NSS     PACKAGE = Panda::NSS
 PROTOTYPES: DISABLE
 
@@ -54,17 +64,18 @@ BOOT:
 void
 init(const char* configdir = NULL)
   CODE:
-    if (!NSS_IsInitialized()) {
-        SECStatus secStatus;
-        if (configdir != NULL)
-            secStatus = NSS_InitReadWrite(configdir);
-        else
-            secStatus = NSS_NoDB_Init(NULL);
-        if (secStatus != SECSuccess) {
-            PNSS_croak();
-        }
-        saved_pid = getpid();
+    NSS_cleanup();
+    SECStatus secStatus;
+    if (configdir != NULL) {
+        PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+        secStatus = NSS_InitReadWrite(configdir);
+    } else {
+        secStatus = NSS_NoDB_Init(NULL);
     }
+    if (secStatus != SECSuccess) {
+        PNSS_croak();
+    }
+    saved_pid = getpid();
 
 void
 reinit()
@@ -80,6 +91,11 @@ reinit()
     saved_pid = pid;
 
 void
+cleanup()
+  CODE:
+  NSS_cleanup();
+
+void
 END()
   CODE:
     if (NSS_IsInitialized()) {
@@ -88,7 +104,6 @@ END()
         NSS_Shutdown();
         PR_Cleanup();
     }
-
 
 MODULE = Panda::NSS     PACKAGE = Panda::NSS::SecMod
 PROTOTYPES: DISABLE
@@ -137,7 +152,7 @@ new(klass, SV* cert_sv)
             /* skip to next eol */
             while ( cl && ( *cp != '\n' )) {
                 cp++; cl--;
-            } 
+            }
             /* skip all blank lines */
             while ( cl && ( *cp == '\n' || *cp == '\r' )) {
                 cp++; cl--;
@@ -180,7 +195,7 @@ new(klass, SV* cert_sv)
 
     /* CERT_NewTempCertificate( defaultDB, item, nickname, isPerm, copyDER) */
     cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &der, NULL, PR_FALSE, PR_TRUE);
-    
+
     SECITEM_FreeItem(&der, PR_FALSE);
     if (!cert) {
         PNSS_croak();
@@ -434,7 +449,7 @@ verify_signed_data(Panda::NSS::Cert cert, SV* payload, SV* signature, double tim
     else {
         RETVAL = 0;
     }
-    
+
     PORT_FreeArena(arena, PR_FALSE);
 
   OUTPUT:
